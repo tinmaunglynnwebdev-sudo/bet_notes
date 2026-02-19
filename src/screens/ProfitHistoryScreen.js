@@ -4,7 +4,7 @@ import { Card, Title, Paragraph, Text, Button } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { STORAGE_KEYS, getItems, deleteItem } from '../utils/storage';
 
-const ProfitHistoryScreen = () => {
+const ProfitHistoryScreen = ({ navigation }) => {
   const [items, setItems] = useState([]);
 
   useFocusEffect(
@@ -45,6 +45,47 @@ const ProfitHistoryScreen = () => {
     }));
   };
 
+  const calculateMonthlyStats = (items) => {
+    let deposit = 0;
+    let withdraw = 0;
+    let profit = 0;
+
+    items.forEach((item) => {
+      const amount = item.amount || 0;
+      if (amount < 0) {
+        deposit += Math.abs(amount);
+      } else {
+        withdraw += amount;
+      }
+      profit += amount;
+    });
+
+    return { deposit, withdraw, profit };
+  };
+
+  const renderSectionFooter = ({ section }) => {
+    const { deposit, withdraw, profit } = calculateMonthlyStats(section.data);
+    
+    return (
+      <View style={styles.footer}>
+        <View style={styles.footerRow}>
+          <Text variant="bodyMedium">Deposit:</Text>
+          <Text variant="bodyMedium" style={{ color: 'red' }}>{deposit.toFixed(2)}</Text>
+        </View>
+        <View style={styles.footerRow}>
+          <Text variant="bodyMedium">Withdraw:</Text>
+          <Text variant="bodyMedium" style={{ color: 'green' }}>{withdraw.toFixed(2)}</Text>
+        </View>
+        <View style={[styles.footerRow, styles.footerTotal]}>
+          <Text variant="titleMedium">Profit:</Text>
+          <Text variant="titleMedium" style={{ color: profit >= 0 ? 'green' : 'red' }}>
+            {profit > 0 ? '+' : ''}{profit.toFixed(2)}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   const sections = groupItemsByMonth(items);
 
   return (
@@ -62,6 +103,7 @@ const ProfitHistoryScreen = () => {
               {item.note ? <Text variant="bodyMedium">{item.note}</Text> : null}
             </Card.Content>
             <Card.Actions>
+              <Button onPress={() => navigation.navigate('ProfitMain', { editItem: item })}>Edit</Button>
               <Button onPress={() => handleDelete(item.id)}>Delete</Button>
             </Card.Actions>
           </Card>
@@ -71,6 +113,7 @@ const ProfitHistoryScreen = () => {
             <Text variant="titleLarge" style={styles.headerText}>{title}</Text>
           </View>
         )}
+        renderSectionFooter={renderSectionFooter}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text>No history found.</Text>
@@ -91,6 +134,25 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontWeight: 'bold',
+  },
+  footer: {
+    backgroundColor: 'white',
+    padding: 10,
+    marginTop: 5,
+    marginBottom: 15,
+    borderRadius: 8,
+    elevation: 2,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+  },
+  footerTotal: {
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 5,
+    marginTop: 5,
   },
   emptyContainer: {
     alignItems: 'center',

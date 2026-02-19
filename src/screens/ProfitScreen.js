@@ -1,21 +1,31 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { TextInput, Button, Card, Text, SegmentedButtons } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
-import { STORAGE_KEYS, addItem, getItems, deleteItem } from '../utils/storage';
+import { STORAGE_KEYS, addItem, getItems, deleteItem, updateItem } from '../utils/storage';
 
-const ProfitScreen = ({ navigation }) => {
+const ProfitScreen = ({ navigation, route }) => {
   const [amount, setAmount] = useState('');
   const [transactionType, setTransactionType] = useState('deposit');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [note, setNote] = useState('');
   const [items, setItems] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
   useFocusEffect(
     useCallback(() => {
       loadItems();
+      // Force reload
     }, [])
   );
+
+  useEffect(() => {
+    if (route.params?.editItem) {
+      handleEdit(route.params.editItem);
+      // Clear params to avoid re-triggering
+      navigation.setParams({ editItem: null });
+    }
+  }, [route.params?.editItem]);
 
   const loadItems = async () => {
     const data = await getItems(STORAGE_KEYS.PROFIT);
@@ -24,23 +34,45 @@ const ProfitScreen = ({ navigation }) => {
     setItems(data);
   };
 
-  const handleAdd = async () => {
+  const handleSave = async () => {
     if (!amount || !date) return;
     const value = Math.abs(parseFloat(amount));
     const finalAmount = transactionType === 'withdraw' ? value : -value;
-    const newItem = { 
+    const itemData = { 
       amount: finalAmount, 
       type: transactionType,
       date, 
       note 
     };
-    const updatedItems = await addItem(STORAGE_KEYS.PROFIT, newItem);
-    if (updatedItems) {
-      setItems(updatedItems);
-      setAmount('');
-      setNote('');
-      setDate(new Date().toISOString().split('T')[0]);
+
+    let updatedItems;
+    if (editingId) {
+      updatedItems = await updateItem(STORAGE_KEYS.PROFIT, { ...itemData, id: editingId });
+    } else {
+      updatedItems = await addItem(STORAGE_KEYS.PROFIT, itemData);
     }
+
+    if (updatedItems) {
+      updatedItems.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setItems(updatedItems);
+      resetForm();
+    }
+  };
+
+  const resetForm = () => {
+    setAmount('');
+    setNote('');
+    setDate(new Date().toISOString().split('T')[0]);
+    setTransactionType('deposit');
+    setEditingId(null);
+  };
+
+  const handleEdit = (item) => {
+    setAmount(Math.abs(item.amount).toString());
+    setTransactionType(item.amount >= 0 ? 'withdraw' : 'deposit');
+    setDate(item.date);
+    setNote(item.note || '');
+    setEditingId(item.id);
   };
 
   const handleDelete = async (id) => {
@@ -87,9 +119,14 @@ const ProfitScreen = ({ navigation }) => {
           onChangeText={setNote}
           style={styles.input}
         />
-        <Button mode="contained" onPress={handleAdd}>
-          Add Record
+        <Button mode="contained" onPress={handleSave}>
+          {editingId ? 'Update Record' : 'Add Record'}
         </Button>
+        {editingId && (
+          <Button mode="text" onPress={resetForm} style={{ marginTop: 5 }}>
+            Cancel Edit
+          </Button>
+        )}
       </View>
       <View style={styles.summaryContainer}>
         <Text variant="titleLarge">Total Profit: {totalProfit.toFixed(2)}</Text>
@@ -113,6 +150,7 @@ const ProfitScreen = ({ navigation }) => {
               <Text variant="bodyMedium">{item.note}</Text>
             </Card.Content>
             <Card.Actions>
+              <Button onPress={() => handleEdit(item)}>Edit</Button>
               <Button onPress={() => handleDelete(item.id)}>Delete</Button>
             </Card.Actions>
           </Card>

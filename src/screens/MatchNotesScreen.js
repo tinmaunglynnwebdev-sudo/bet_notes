@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { TextInput, Button, Card, Text } from 'react-native-paper';
-import { STORAGE_KEYS, addItem, getItems, deleteItem } from '../utils/storage';
+import { STORAGE_KEYS, addItem, getItems, deleteItem, updateItem } from '../utils/storage';
 
 const MatchNotesScreen = () => {
   const [matchDate, setMatchDate] = useState(new Date().toISOString().split('T')[0]);
   const [matchInfo, setMatchInfo] = useState('');
   const [handicap, setHandicap] = useState('');
   const [items, setItems] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     loadItems();
+    // Force reload
   }, []);
 
   const loadItems = async () => {
@@ -18,16 +20,35 @@ const MatchNotesScreen = () => {
     setItems(data);
   };
 
-  const handleAdd = async () => {
+  const handleSave = async () => {
     if (!matchDate || !matchInfo) return;
-    const newItem = { matchDate, matchInfo, handicap };
-    const updatedItems = await addItem(STORAGE_KEYS.MATCH_NOTES, newItem);
+    const itemData = { matchDate, matchInfo, handicap };
+
+    let updatedItems;
+    if (editingId) {
+      updatedItems = await updateItem(STORAGE_KEYS.MATCH_NOTES, { ...itemData, id: editingId });
+    } else {
+      updatedItems = await addItem(STORAGE_KEYS.MATCH_NOTES, itemData);
+    }
+
     if (updatedItems) {
       setItems(updatedItems);
-      setMatchInfo('');
-      setHandicap('');
-      setMatchDate(new Date().toISOString().split('T')[0]);
+      resetForm();
     }
+  };
+
+  const resetForm = () => {
+    setMatchInfo('');
+    setHandicap('');
+    setMatchDate(new Date().toISOString().split('T')[0]);
+    setEditingId(null);
+  };
+
+  const handleEdit = (item) => {
+    setMatchDate(item.matchDate);
+    setMatchInfo(item.matchInfo);
+    setHandicap(item.handicap || '');
+    setEditingId(item.id);
   };
 
   const handleDelete = async (id) => {
@@ -56,9 +77,14 @@ const MatchNotesScreen = () => {
           onChangeText={setHandicap}
           style={styles.input}
         />
-        <Button mode="contained" onPress={handleAdd}>
-          Add Match Note
+        <Button mode="contained" onPress={handleSave}>
+          {editingId ? 'Update Match Note' : 'Add Match Note'}
         </Button>
+        {editingId && (
+          <Button mode="text" onPress={resetForm} style={{ marginTop: 5 }}>
+            Cancel Edit
+          </Button>
+        )}
       </View>
       <FlatList
         data={items}
@@ -71,6 +97,7 @@ const MatchNotesScreen = () => {
               <Text variant="bodyMedium">Handicap: {item.handicap}</Text>
             </Card.Content>
             <Card.Actions>
+              <Button onPress={() => handleEdit(item)}>Edit</Button>
               <Button onPress={() => handleDelete(item.id)}>Delete</Button>
             </Card.Actions>
           </Card>

@@ -29,6 +29,20 @@ export const addItem = async (key, item) => {
   }
 };
 
+export const updateItem = async (key, updatedItem) => {
+  try {
+    const currentItems = await getItems(key);
+    const newItems = currentItems.map((item) => 
+      item.id === updatedItem.id ? updatedItem : item
+    );
+    await AsyncStorage.setItem(key, JSON.stringify(newItems));
+    return newItems;
+  } catch (e) {
+    console.error('Error updating value', e);
+    return null;
+  }
+};
+
 export const deleteItem = async (key, id) => {
   try {
     const currentItems = await getItems(key);
