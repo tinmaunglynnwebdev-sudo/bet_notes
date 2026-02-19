@@ -1,21 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { TextInput, Button, Card, Text, SegmentedButtons } from 'react-native-paper';
+import { useFocusEffect } from '@react-navigation/native';
 import { STORAGE_KEYS, addItem, getItems, deleteItem } from '../utils/storage';
 
-const ProfitScreen = () => {
+const ProfitScreen = ({ navigation }) => {
   const [amount, setAmount] = useState('');
   const [transactionType, setTransactionType] = useState('deposit');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [note, setNote] = useState('');
   const [items, setItems] = useState([]);
 
-  useEffect(() => {
-    loadItems();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadItems();
+    }, [])
+  );
 
   const loadItems = async () => {
     const data = await getItems(STORAGE_KEYS.PROFIT);
+    // Sort by date descending
+    data.sort((a, b) => new Date(b.date) - new Date(a.date));
     setItems(data);
   };
 
@@ -89,8 +94,14 @@ const ProfitScreen = () => {
       <View style={styles.summaryContainer}>
         <Text variant="titleLarge">Total Profit: {totalProfit.toFixed(2)}</Text>
       </View>
+      <View style={styles.listHeader}>
+        <Text variant="titleMedium">Recent 5 Records</Text>
+        <Button mode="text" onPress={() => navigation.navigate('ProfitHistory')}>
+          See All History
+        </Button>
+      </View>
       <FlatList
-        data={items}
+        data={items.slice(0, 5)}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <Card style={styles.card}>
@@ -117,6 +128,12 @@ const styles = StyleSheet.create({
   segmentedButton: { marginBottom: 10 },
   input: { marginBottom: 10, backgroundColor: 'white' },
   summaryContainer: { alignItems: 'center', marginBottom: 10 },
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   card: { marginBottom: 10 },
 });
 
