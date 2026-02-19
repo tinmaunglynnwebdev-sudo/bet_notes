@@ -68,48 +68,54 @@ const MatchNotesScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.inputContainer}>
-        <TouchableOpacity onPress={() => setShowDatePicker(!showDatePicker)}>
-          <View pointerEvents="none">
-            <TextInput
-              label="Match Date"
-              value={matchDate}
-              editable={false}
-              right={<TextInput.Icon icon="calendar" />}
-              style={styles.input}
+      <Card style={styles.formCard}>
+        <Card.Title title={editingId ? "Edit Match Note" : "New Match Note"} />
+        <Card.Content>
+          <TouchableOpacity onPress={() => setShowDatePicker(!showDatePicker)}>
+            <View pointerEvents="none">
+              <TextInput
+                label="Match Date"
+                value={matchDate}
+                editable={false}
+                right={<TextInput.Icon icon="calendar" />}
+                style={styles.input}
+              />
+            </View>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={new Date(matchDate)}
+              mode="date"
+              display="default"
+              onChange={onChangeDate}
             />
-          </View>
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            testID="dateTimePicker"
-            value={new Date(matchDate)}
-            mode="date"
-            display="default"
-            onChange={onChangeDate}
+          )}
+          <TextInput
+            label="Match Info"
+            value={matchInfo}
+            onChangeText={setMatchInfo}
+            style={styles.input}
           />
-        )}
-        <TextInput
-          label="Match Info"
-          value={matchInfo}
-          onChangeText={setMatchInfo}
-          style={styles.input}
-        />
-        <TextInput
-          label="Handicap"
-          value={handicap}
-          onChangeText={setHandicap}
-          style={styles.input}
-        />
-        <Button mode="contained" onPress={handleSave}>
-          {editingId ? 'Update Match Note' : 'Add Match Note'}
-        </Button>
-        {editingId && (
-          <Button mode="text" onPress={resetForm} style={{ marginTop: 5 }}>
-            Cancel Edit
-          </Button>
-        )}
-      </View>
+          <TextInput
+            label="Handicap"
+            value={handicap}
+            onChangeText={setHandicap}
+            style={styles.input}
+          />
+          <View style={styles.formActions}>
+            <Button mode="contained" onPress={handleSave} style={styles.saveButton}>
+              {editingId ? 'Update' : 'Add'}
+            </Button>
+            {editingId && (
+              <Button mode="text" onPress={resetForm} style={styles.cancelButton}>
+                Cancel
+              </Button>
+            )}
+          </View>
+        </Card.Content>
+      </Card>
+
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
@@ -133,9 +139,12 @@ const MatchNotesScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 10, backgroundColor: '#f5f5f5' },
-  inputContainer: { marginBottom: 10 },
+  formCard: { marginBottom: 15, elevation: 4, borderRadius: 12 },
   input: { marginBottom: 10, backgroundColor: 'white' },
-  card: { marginBottom: 10 },
+  formActions: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
+  saveButton: { flex: 1, marginRight: 10 },
+  cancelButton: { flex: 0.5 },
+  card: { marginBottom: 10, borderRadius: 8 },
 });
 
 export default MatchNotesScreen;
