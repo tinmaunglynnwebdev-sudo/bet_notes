@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { TextInput, Button, Card, Text } from 'react-native-paper';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { STORAGE_KEYS, addItem, getItems, deleteItem, updateItem } from '../utils/storage';
 
 const MatchNotesScreen = () => {
@@ -9,6 +10,7 @@ const MatchNotesScreen = () => {
   const [handicap, setHandicap] = useState('');
   const [items, setItems] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     loadItems();
@@ -18,6 +20,14 @@ const MatchNotesScreen = () => {
   const loadItems = async () => {
     const data = await getItems(STORAGE_KEYS.MATCH_NOTES);
     setItems(data);
+  };
+
+  const onChangeDate = (event, selectedDate) => {
+    const currentDate = selectedDate || new Date(matchDate);
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    setMatchDate(currentDate.toISOString().split('T')[0]);
   };
 
   const handleSave = async () => {
@@ -59,12 +69,26 @@ const MatchNotesScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
-        <TextInput
-          label="Match Date Time"
-          value={matchDate}
-          onChangeText={setMatchDate}
-          style={styles.input}
-        />
+        <TouchableOpacity onPress={() => setShowDatePicker(!showDatePicker)}>
+          <View pointerEvents="none">
+            <TextInput
+              label="Match Date"
+              value={matchDate}
+              editable={false}
+              right={<TextInput.Icon icon="calendar" />}
+              style={styles.input}
+            />
+          </View>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={new Date(matchDate)}
+            mode="date"
+            display="default"
+            onChange={onChangeDate}
+          />
+        )}
         <TextInput
           label="Match Info"
           value={matchInfo}

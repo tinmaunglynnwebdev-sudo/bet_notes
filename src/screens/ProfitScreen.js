@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { TextInput, Button, Card, Text, SegmentedButtons } from 'react-native-paper';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { STORAGE_KEYS, addItem, getItems, deleteItem, updateItem } from '../utils/storage';
 
@@ -11,6 +12,7 @@ const ProfitScreen = ({ navigation, route }) => {
   const [note, setNote] = useState('');
   const [items, setItems] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -26,6 +28,14 @@ const ProfitScreen = ({ navigation, route }) => {
       navigation.setParams({ editItem: null });
     }
   }, [route.params?.editItem]);
+
+  const onChangeDate = (event, selectedDate) => {
+    const currentDate = selectedDate || new Date(date);
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    setDate(currentDate.toISOString().split('T')[0]);
+  };
 
   const loadItems = async () => {
     const data = await getItems(STORAGE_KEYS.PROFIT);
@@ -107,12 +117,26 @@ const ProfitScreen = ({ navigation, route }) => {
           keyboardType="numeric"
           style={styles.input}
         />
-        <TextInput
-          label="Date (YYYY-MM-DD)"
-          value={date}
-          onChangeText={setDate}
-          style={styles.input}
-        />
+        <TouchableOpacity onPress={() => setShowDatePicker(!showDatePicker)}>
+          <View pointerEvents="none">
+            <TextInput
+              label="Date"
+              value={date}
+              editable={false}
+              right={<TextInput.Icon icon="calendar" />}
+              style={styles.input}
+            />
+          </View>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={new Date(date)}
+            mode="date"
+            display="default"
+            onChange={onChangeDate}
+          />
+        )}
         <TextInput
           label="Note"
           value={note}
