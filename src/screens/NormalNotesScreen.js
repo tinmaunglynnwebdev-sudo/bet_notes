@@ -173,11 +173,11 @@ const NormalNotesScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 16, backgroundColor: '#f8f9fa' },
   searchBar: { 
     marginBottom: 20, 
     elevation: 0, 
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#e8eaed',
     borderRadius: 12,
     height: 48,
   },
@@ -186,9 +186,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white', 
     padding: 20, 
     borderRadius: 16,
-    elevation: 4
+    elevation: 4,
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8 
   },
-  input: { marginBottom: 12, backgroundColor: 'white' },
+  input: { marginBottom: 12, backgroundColor: '#f8f9fa' },
   formActions: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   saveButton: { flex: 1, marginRight: 12 },
   
@@ -196,14 +200,22 @@ const styles = StyleSheet.create({
   masonryContainer: { flexDirection: 'row', justifyContent: 'space-between' },
   column: { flex: 1, marginHorizontal: 8 },
   
-  card: { marginBottom: 12, borderRadius: 16, elevation: 0 },
+  card: { 
+    marginBottom: 12, 
+    borderRadius: 16, 
+    elevation: 2, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.05, 
+    shadowRadius: 2 
+  },
   cardHeader: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center',
     marginBottom: 8
   },
-  dateText: { color: '#666', fontSize: 12, opacity: 0.7 },
+  dateText: { color: '#5f6368', fontSize: 12, opacity: 0.8 },
   cardActions: { flexDirection: 'row', margin: -8 },
   noteText: { fontSize: 14, lineHeight: 24 },
 });

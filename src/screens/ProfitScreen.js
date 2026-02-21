@@ -185,18 +185,43 @@ const ProfitScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: '#f5f5f5' },
-  inputContainer: { marginBottom: 10 },
-  segmentedButton: { marginBottom: 10 },
-  input: { marginBottom: 10, backgroundColor: 'white' },
-  summaryContainer: { alignItems: 'center', marginBottom: 10 },
+  container: { flex: 1, padding: 16, backgroundColor: '#f8f9fa' },
+  inputContainer: { 
+    backgroundColor: 'white', 
+    padding: 20, 
+    marginBottom: 20, 
+    borderRadius: 16, 
+    elevation: 4, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8 
+  },
+  segmentedButton: { marginBottom: 16 },
+  input: { marginBottom: 12, backgroundColor: '#f8f9fa' },
+  summaryContainer: { 
+    alignItems: 'center', 
+    marginBottom: 20, 
+    backgroundColor: '#e8f0fe', 
+    padding: 16, 
+    borderRadius: 12, 
+    elevation: 2 
+  },
   listHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 16,
   },
-  card: { marginBottom: 10 },
+  card: { 
+    marginBottom: 12, 
+    borderRadius: 12, 
+    elevation: 3, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 4 
+  },
 });
 
 export default ProfitScreen;

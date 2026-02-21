@@ -3,6 +3,8 @@ import { View, SectionList, StyleSheet } from 'react-native';
 import { Card, Title, Paragraph, Text, Button } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { STORAGE_KEYS, getItems, deleteItem } from '../utils/storage';
+import * as Print from 'expo-print';
+import { Share } from 'react-native';
 
 const ProfitHistoryScreen = ({ navigation }) => {
   const [items, setItems] = useState([]);
@@ -63,6 +65,60 @@ const ProfitHistoryScreen = ({ navigation }) => {
     return { deposit, withdraw, profit };
   };
 
+  const exportToPDF = async (section) => {
+    const { title, data } = section;
+    const { deposit, withdraw, profit } = calculateMonthlyStats(data);
+
+    const html = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #1a73e8; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .profit { color: ${profit >= 0 ? 'green' : 'red'}; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h1>BetNotes - ${title} Report</h1>
+          <h2>Summary</h2>
+          <p>Deposit: ${deposit.toFixed(2)}</p>
+          <p>Withdraw: ${withdraw.toFixed(2)}</p>
+          <p>Profit: <span class="profit">${profit > 0 ? '+' : ''}${profit.toFixed(2)}</span></p>
+          <h2>Transactions</h2>
+          <table>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Note</th>
+            </tr>
+            ${data.map(item => `
+              <tr>
+                <td>${item.date}</td>
+                <td>${item.type ? item.type.toUpperCase() : (item.amount >= 0 ? 'WITHDRAW' : 'DEPOSIT')}</td>
+                <td>${Math.abs(item.amount)}</td>
+                <td>${item.note || ''}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </body>
+      </html>
+    `;
+
+    try {
+      const file = await Print.printToFileAsync({ html });
+      await Share.share({
+        url: file.uri,
+        title: `BetNotes ${title} Report`,
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
+
   const renderSectionFooter = ({ section }) => {
     const { deposit, withdraw, profit } = calculateMonthlyStats(section.data);
     
@@ -81,6 +137,11 @@ const ProfitHistoryScreen = ({ navigation }) => {
           <Text variant="titleMedium" style={{ color: profit >= 0 ? 'green' : 'red' }}>
             {profit > 0 ? '+' : ''}{profit.toFixed(2)}
           </Text>
+        </View>
+        <View style={styles.footerRow}>
+          <Button mode="outlined" onPress={() => exportToPDF(section)} style={styles.exportButton}>
+            Export PDF
+          </Button>
         </View>
       </View>
     );
@@ -125,38 +186,60 @@ const ProfitHistoryScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: '#f5f5f5' },
-  card: { marginBottom: 10 },
+  container: { flex: 1, padding: 16, backgroundColor: '#f8f9fa' },
+  card: { 
+    marginBottom: 12, 
+    borderRadius: 12, 
+    elevation: 3, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 4 
+  },
   header: {
-    paddingVertical: 10,
-    paddingHorizontal: 5,
-    backgroundColor: '#f5f5f5',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    marginBottom: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   headerText: {
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#1a73e8',
   },
   footer: {
     backgroundColor: 'white',
-    padding: 10,
-    marginTop: 5,
-    marginBottom: 15,
-    borderRadius: 8,
-    elevation: 2,
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 20,
+    borderRadius: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
   },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 5,
+    marginBottom: 8,
   },
   footerTotal: {
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 5,
-    marginTop: 5,
+    borderTopColor: '#dadce0',
+    paddingTop: 8,
+    marginTop: 8,
   },
+  exportButton: { marginTop: 8, marginBottom: 8 },
   emptyContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 40,
+    padding: 20,
   },
 });
 

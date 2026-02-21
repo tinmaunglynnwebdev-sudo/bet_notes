@@ -138,13 +138,30 @@ const MatchNotesScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: '#f5f5f5' },
-  formCard: { marginBottom: 15, elevation: 4, borderRadius: 12 },
-  input: { marginBottom: 10, backgroundColor: 'white' },
-  formActions: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
-  saveButton: { flex: 1, marginRight: 10 },
+  container: { flex: 1, padding: 16, backgroundColor: '#f8f9fa' },
+  formCard: { 
+    marginBottom: 20, 
+    elevation: 4, 
+    borderRadius: 16, 
+    backgroundColor: 'white',
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8 
+  },
+  input: { marginBottom: 12, backgroundColor: '#f8f9fa' },
+  formActions: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  saveButton: { flex: 1, marginRight: 12 },
   cancelButton: { flex: 0.5 },
-  card: { marginBottom: 10, borderRadius: 8 },
+  card: { 
+    marginBottom: 12, 
+    borderRadius: 12, 
+    elevation: 3, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 4 
+  },
 });
 
 export default MatchNotesScreen;
