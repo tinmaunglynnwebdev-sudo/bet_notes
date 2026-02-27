@@ -1,4 +1,4 @@
-import { MD3LightTheme } from 'react-native-paper';
+import { MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
 
 export const premiumTheme = {
   ...MD3LightTheme,
@@ -40,6 +40,48 @@ export const premiumTheme = {
     },
     bodyLarge: {
       ...MD3LightTheme.fonts.bodyLarge,
+      fontWeight: '400',
+    },
+  },
+};
+
+export const darkPremiumTheme = {
+  ...MD3DarkTheme,
+  colors: {
+    ...MD3DarkTheme.colors,
+    primary: '#8ab4f8',
+    primaryContainer: '#1a73e8',
+    secondary: '#81c995',
+    secondaryContainer: '#1b5e20',
+    tertiary: '#ff8a80',
+    tertiaryContainer: '#ea4335',
+    surface: '#1e1e1e',
+    surfaceVariant: '#2d2d2d',
+    onSurface: '#e8eaed',
+    onSurfaceVariant: '#bdc1c6',
+    background: '#121212',
+    onBackground: '#e8eaed',
+    error: '#ff8a80',
+    errorContainer: '#ea4335',
+    outline: '#5f6368',
+    outlineVariant: '#3c4043',
+    shadow: '#000000',
+    scrim: '#000000',
+    surfaceTint: '#8ab4f8',
+  },
+  roundness: 12,
+  fonts: {
+    ...MD3DarkTheme.fonts,
+    titleLarge: {
+      ...MD3DarkTheme.fonts.titleLarge,
+      fontWeight: '700',
+    },
+    titleMedium: {
+      ...MD3DarkTheme.fonts.titleMedium,
+      fontWeight: '600',
+    },
+    bodyLarge: {
+      ...MD3DarkTheme.fonts.bodyLarge,
       fontWeight: '400',
     },
   },

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { TextInput, Button, Card, Text, Searchbar, IconButton } from 'react-native-paper';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Platform, RefreshControl, FlatList } from 'react-native';
+import { TextInput, Button, Card, Text, Searchbar, IconButton, Snackbar, FAB } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTranslation } from 'react-i18next';
 import { STORAGE_KEYS, addItem, getItems, deleteItem, updateItem } from '../utils/storage';
+import { useTheme } from '../contexts/ThemeContext';
+import FormModal from '../components/FormModal';
 
-const PASTEL_COLORS = [
+const PASTEL_COLORS_LIGHT = [
   '#FFF8E1', // Amber
   '#E3F2FD', // Blue
   '#F1F8E9', // Green
@@ -13,13 +16,27 @@ const PASTEL_COLORS = [
   '#E0F7FA', // Cyan
 ];
 
+const PASTEL_COLORS_DARK = [
+  '#3e2723', // Dark Brown
+  '#1a237e', // Dark Blue
+  '#1b5e20', // Dark Green
+  '#880e4f', // Dark Pink
+  '#4a148c', // Dark Purple
+  '#006064', // Dark Cyan
+];
+
 const NormalNotesScreen = () => {
+  const { t } = useTranslation();
+  const { theme } = useTheme();
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [snackbar, setSnackbar] = useState({ visible: false, message: '' });
+  const [refreshing, setRefreshing] = useState(false);
+  const [showFormModal, setShowFormModal] = useState(false);
 
   useEffect(() => {
     loadItems();
@@ -42,6 +59,16 @@ const NormalNotesScreen = () => {
     setDate(currentDate.toISOString().split('T')[0]);
   };
 
+  const showSnackbar = (message, color = theme.colors.primary) => {
+    setSnackbar({ visible: true, message, color });
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadItems();
+    setRefreshing(false);
+  };
+
   const handleSave = async () => {
     if (!date || !notes) return;
     const itemData = { date, notes };
@@ -57,6 +84,7 @@ const NormalNotesScreen = () => {
       updatedItems.sort((a, b) => new Date(b.date) - new Date(a.date));
       setItems(updatedItems);
       resetForm();
+      showSnackbar(editingId ? t('updated') : t('added'), theme.colors.secondary);
     }
   };
 
@@ -64,12 +92,14 @@ const NormalNotesScreen = () => {
     setNotes('');
     setDate(new Date().toISOString().split('T')[0]);
     setEditingId(null);
+    setShowFormModal(false);
   };
 
   const handleEdit = (item) => {
     setDate(item.date);
     setNotes(item.notes);
     setEditingId(item.id);
+    setShowFormModal(true);
   };
 
   const handleDelete = async (id) => {
@@ -77,6 +107,7 @@ const NormalNotesScreen = () => {
     if (updatedItems) {
       updatedItems.sort((a, b) => new Date(b.date) - new Date(a.date));
       setItems(updatedItems);
+      showSnackbar(t('deleted'), theme.colors.error);
     }
   };
 
@@ -91,43 +122,95 @@ const NormalNotesScreen = () => {
     for (let i = 0; i < id.length; i++) {
       hash = id.charCodeAt(i) + ((hash << 5) - hash);
     }
-    const index = Math.abs(hash) % PASTEL_COLORS.length;
-    return PASTEL_COLORS[index];
+    const colors = theme.dark ? PASTEL_COLORS_DARK : PASTEL_COLORS_LIGHT;
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
   };
 
   const renderNoteCard = (item) => (
     <Card key={item.id} style={[styles.card, { backgroundColor: getColorForItem(item.id) }]}>
-      <Card.Content>
+      <Card.Content style={styles.cardContentWrapper}>
         <View style={styles.cardHeader}>
-          <Text variant="labelMedium" style={styles.dateText}>{item.date}</Text>
+          <View style={styles.cardTop}>
+            <View style={styles.dateContainer}>
+              <Text variant="labelSmall" style={[styles.dateText, { color: theme.dark ? '#ccc' : '#666' }]}>📅 {item.date}</Text>
+            </View>
+          </View>
           <View style={styles.cardActions}>
-            <IconButton icon="pencil" size={18} onPress={() => handleEdit(item)} />
-            <IconButton icon="delete" size={18} onPress={() => handleDelete(item.id)} />
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: theme.colors.primaryContainer }]}
+              onPress={() => handleEdit(item)}
+            >
+              <Text style={{ color: theme.colors.primary, fontSize: 18, fontWeight: 'bold' }}>✏️</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: theme.colors.errorContainer }]}
+              onPress={() => handleDelete(item.id)}
+            >
+              <Text style={{ color: theme.colors.error, fontSize: 18, fontWeight: 'bold' }}>🗑️</Text>
+            </TouchableOpacity>
           </View>
         </View>
-        <Text variant="bodyMedium" style={styles.noteText}>{item.notes}</Text>
+        <Text variant="bodyMedium" style={[styles.noteText, { color: theme.colors.onSurface }]} numberOfLines={5}>{item.notes}</Text>
       </Card.Content>
     </Card>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Searchbar
-        placeholder="Search notes..."
+        placeholder={t('search_notes')}
         onChangeText={setSearchQuery}
         value={searchQuery}
-        style={styles.searchBar}
+        style={[styles.searchBar, { backgroundColor: theme.colors.surfaceVariant }]}
+      />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+        }
+      >
+        <View style={styles.masonryContainer}>
+          <View style={styles.column}>
+            {filteredItems.filter((_, i) => i % 2 === 0).map(renderNoteCard)}
+          </View>
+          <View style={styles.column}>
+            {filteredItems.filter((_, i) => i % 2 !== 0).map(renderNoteCard)}
+          </View>
+        </View>
+      </ScrollView>
+      <Snackbar
+        visible={snackbar.visible}
+        onDismiss={() => setSnackbar(prev => ({ ...prev, visible: false }))}
+        duration={2000}
+        style={{ backgroundColor: snackbar.color || theme.colors.primary }}
+      >
+        {snackbar.message}
+      </Snackbar>
+      
+      <FAB
+        icon="plus"
+        style={styles.fab}
+        onPress={() => {
+          resetForm();
+          setShowFormModal(true);
+        }}
       />
       
-      <View style={styles.inputContainer}>
+      <FormModal
+        visible={showFormModal}
+        onDismiss={resetForm}
+      >
         <TouchableOpacity onPress={() => setShowDatePicker(!showDatePicker)}>
           <View pointerEvents="none">
             <TextInput
-              label="Date"
+              label={t('date')}
               value={date}
               editable={false}
               right={<TextInput.Icon icon="calendar" />}
-              style={styles.input}
+              style={[styles.input, { backgroundColor: theme.colors.surfaceVariant }]}
+              mode="outlined"
             />
           </View>
         </TouchableOpacity>
@@ -141,83 +224,85 @@ const NormalNotesScreen = () => {
           />
         )}
         <TextInput
-          label="Notes"
+          label={t('note')}
           value={notes}
           onChangeText={setNotes}
           multiline
           numberOfLines={3}
-          style={styles.input}
+          style={[styles.input, { backgroundColor: theme.colors.surfaceVariant }]}
+          mode="outlined"
         />
-        <View style={styles.formActions}>
-          <Button mode="contained" onPress={handleSave} style={styles.saveButton}>
-            {editingId ? 'Update' : 'Add'}
-          </Button>
-          <Button mode="text" onPress={resetForm}>
-            {editingId ? 'Cancel Edit' : 'Clear'}
-          </Button>
-        </View>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.masonryContainer}>
-          <View style={styles.column}>
-            {filteredItems.filter((_, i) => i % 2 === 0).map(renderNoteCard)}
-          </View>
-          <View style={styles.column}>
-            {filteredItems.filter((_, i) => i % 2 !== 0).map(renderNoteCard)}
-          </View>
-        </View>
-      </ScrollView>
+        <Button mode="contained" onPress={handleSave}>
+          {editingId ? t('update') : t('add')}
+        </Button>
+      </FormModal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#f8f9fa' },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
   searchBar: { 
-    marginBottom: 20, 
-    elevation: 0, 
-    backgroundColor: '#e8eaed',
-    borderRadius: 12,
-    height: 48,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 16,
+    elevation: 2,
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    height: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
-  inputContainer: { 
-    marginBottom: 20, 
-    backgroundColor: 'white', 
-    padding: 20, 
-    borderRadius: 16,
-    elevation: 4,
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.1, 
-    shadowRadius: 8 
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    elevation: 8,
   },
-  input: { marginBottom: 12, backgroundColor: '#f8f9fa' },
-  formActions: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-  saveButton: { flex: 1, marginRight: 12 },
+  input: { marginBottom: 14 },
   
-  scrollContent: { paddingBottom: 100 },
+  scrollContent: { paddingHorizontal: 12, paddingBottom: 100, paddingTop: 8 },
   masonryContainer: { flexDirection: 'row', justifyContent: 'space-between' },
-  column: { flex: 1, marginHorizontal: 8 },
+  column: { flex: 1, marginHorizontal: 4 },
   
   card: { 
-    marginBottom: 12, 
-    borderRadius: 16, 
-    elevation: 2, 
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 1 }, 
-    shadowOpacity: 0.05, 
-    shadowRadius: 2 
+    borderRadius: 18,
+    marginBottom: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    overflow: 'hidden',
   },
   cardHeader: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    alignItems: 'center',
-    marginBottom: 8
+    alignItems: 'flex-start',
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    paddingBottom: 4
   },
-  dateText: { color: '#5f6368', fontSize: 12, opacity: 0.8 },
-  cardActions: { flexDirection: 'row', margin: -8 },
-  noteText: { fontSize: 14, lineHeight: 24 },
+  cardContentWrapper: { padding: 0 },
+  cardTop: { padding: 0, flex: 1 },
+  cardActions: { flexDirection: 'row', gap: 8, marginLeft: 8 },
+  actionButton: { 
+    width: 44, 
+    height: 44, 
+    borderRadius: 12, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+  },
+  dateContainer: { backgroundColor: 'rgba(0, 0, 0, 0.08)', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, alignSelf: 'flex-start' },
+  dateText: { color: '#666666', fontSize: 11, fontWeight: '600', opacity: 0.8 },
+  noteText: { fontSize: 15, lineHeight: 24, fontWeight: '500', paddingHorizontal: 16, paddingVertical: 8, paddingBottom: 12 },
 });
 
 export default NormalNotesScreen;
