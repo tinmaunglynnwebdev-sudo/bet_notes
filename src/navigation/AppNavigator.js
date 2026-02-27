@@ -52,6 +52,10 @@ const withHeaderOptions = (theme) => ({
   headerStyle: { backgroundColor: theme.colors.surface },
   headerTintColor: theme.colors.onSurface,
   headerShadowVisible: false,
+});
+
+const withHeaderControlsOptions = (theme) => ({
+  ...withHeaderOptions(theme),
   headerRight: () => <HeaderControls />,
 });
 
@@ -59,7 +63,7 @@ const ProfitStack = () => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   return (
-    <Stack.Navigator screenOptions={withHeaderOptions(theme)}>
+    <Stack.Navigator screenOptions={withHeaderControlsOptions(theme)}>
       <Stack.Screen name="ProfitMain" component={ProfitScreen} options={{ title: t('profit_income') }} />
       <Stack.Screen name="ProfitHistory" component={ProfitHistoryScreen} options={{ title: t('history') }} />
     </Stack.Navigator>

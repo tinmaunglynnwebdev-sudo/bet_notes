@@ -101,38 +101,46 @@ const MatchNotesScreen = () => {
         renderItem={({ item }) => (
           <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
             <Card.Content style={styles.cardContentWrapper}>
-              <View style={styles.cardHeader}>
-                <View style={styles.cardTop}>
-                  <View style={styles.cardIcon}>
-                    <Text style={styles.iconText}>🏈</Text>
+              <View style={styles.cardLayout}>
+                {/* Left: Icon + Main Info */}
+                <View style={styles.cardMainContent}>
+                  <View style={[styles.iconBox, { backgroundColor: theme.colors.primaryContainer }]}>
+                    <Text style={styles.icon}>⚽</Text>
                   </View>
-                  <View style={styles.cardTextContent}>
-                    <Text variant="titleSmall" style={{ color: theme.colors.onSurface, fontWeight: '700', marginBottom: 6 }}>
-                      {item.matchInfo.length > 28 ? item.matchInfo.substring(0, 28) + '...' : item.matchInfo}
+                  <View style={styles.infoColumn}>
+                    <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '700', marginBottom: 6 }}>
+                      {item.matchInfo.length > 32 ? item.matchInfo.substring(0, 32) + '...' : item.matchInfo}
                     </Text>
-                    <View style={styles.infoRow}>
-                      <Text style={{ fontSize: 11 }}>📅</Text>
-                      <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginLeft: 6, fontWeight: '500' }}>{item.matchDate}</Text>
+                    <View style={styles.metaRow}>
+                      <Text style={{ fontSize: 12, marginRight: 4 }}>📅</Text>
+                      <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant, fontWeight: '500' }}>
+                        {item.matchDate}
+                      </Text>
                     </View>
                     {item.handicap && (
-                      <View style={[styles.badgeSmall, { backgroundColor: theme.colors.primaryContainer, marginTop: 8 }]}>
-                        <Text variant="labelSmall" style={{ color: theme.colors.primary, fontWeight: '700', fontSize: 10 }}>♿ {item.handicap}</Text>
+                      <View style={[styles.metaRow, { marginTop: 4 }]}>
+                        <Text style={{ fontSize: 12, marginRight: 4 }}>⚖️</Text>
+                        <Text variant="labelSmall" style={{ color: theme.colors.secondary, fontWeight: '600' }}>
+                          {item.handicap}
+                        </Text>
                       </View>
                     )}
                   </View>
                 </View>
-                <View style={styles.cardActions}>
+
+                {/* Right: Action Buttons */}
+                <View style={styles.actionRow}>
                   <TouchableOpacity 
-                    style={[styles.actionButton, { backgroundColor: theme.colors.primaryContainer }]}
+                    style={[styles.btn, { backgroundColor: theme.colors.primaryContainer }]}
                     onPress={() => handleEdit(item)}
                   >
-                    <Text style={{ color: theme.colors.primary, fontSize: 18, fontWeight: 'bold' }}>✏️</Text>
+                    <Text style={{ color: theme.colors.primary, fontSize: 16 }}>✏️</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
-                    style={[styles.actionButton, { backgroundColor: theme.colors.errorContainer }]}
+                    style={[styles.btn, { backgroundColor: theme.colors.errorContainer }]}
                     onPress={() => handleDelete(item.id)}
                   >
-                    <Text style={{ color: theme.colors.error, fontSize: 18, fontWeight: 'bold' }}>🗑️</Text>
+                    <Text style={{ color: theme.colors.error, fontSize: 16 }}>🗑️</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -217,36 +225,67 @@ const styles = StyleSheet.create({
   card: { 
     marginHorizontal: 16,
     marginBottom: 12,
+    marginTop: 8,
     borderRadius: 16,
-    elevation: 3,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     overflow: 'hidden',
   },
-  cardContentWrapper: { padding: 0 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: 12 },
-  cardTop: { padding: 4, flexDirection: 'row', alignItems: 'flex-start', flex: 1 },
-  cardActions: { flexDirection: 'row', gap: 8 },
-  actionButton: { 
+  cardContentWrapper: { padding: 12 },
+  cardLayout: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  cardMainContent: { 
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    flexShrink: 0,
+  },
+  icon: { fontSize: 26 },
+  infoColumn: { 
+    flex: 1,
+    justifyContent: 'center',
+  },
+  metaRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center',
+  },
+  actionRow: { 
+    flexDirection: 'row', 
+    gap: 8,
+    flexShrink: 0,
+  },
+  btn: { 
     width: 44, 
     height: 44, 
-    borderRadius: 12, 
+    borderRadius: 10, 
     justifyContent: 'center', 
     alignItems: 'center',
-    elevation: 2,
+    elevation: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
-  cardActions: { flexDirection: 'row', marginLeft: 8 },
-  cardIcon: { marginRight: 12, fontSize: 26 },
-  cardTextContent: { flex: 1 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
-  badgeSmall: { marginTop: 8, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 8, alignSelf: 'flex-start' },
-  iconText: { fontSize: 26 },
 });
 
 export default MatchNotesScreen;
